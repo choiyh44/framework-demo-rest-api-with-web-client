@@ -105,6 +105,30 @@ public abstract class RestApi {
 		return execute(request, HttpMethod.POST, responseReference);
 	}
 	
+	public <T> RestResponse<T> put(Object request, Class<T> type) {
+		return execute(request, HttpMethod.PUT, type);
+	}
+	
+	public <T> RestResponse<T> put(Object request, ParameterizedTypeReference<T> responseReference) {
+		return execute(request, HttpMethod.PUT, responseReference);
+	}
+	
+	public <T> RestResponse<T> patch(Object request, Class<T> type) {
+		return execute(request, HttpMethod.PATCH, type);
+	}
+	
+	public <T> RestResponse<T> patch(Object request, ParameterizedTypeReference<T> responseReference) {
+		return execute(request, HttpMethod.PATCH, responseReference);
+	}
+	
+	public <T> RestResponse<T> delete(Class<T> type) {
+		return execute(null, HttpMethod.DELETE, type);
+	}
+
+	public <T> RestResponse<T> delete(ParameterizedTypeReference<T> responseReference) {
+		return execute(null, HttpMethod.DELETE, responseReference);
+	}
+	
 	private WebClient webClient() {
 		return WebClientInstance.get();
 	}
@@ -139,7 +163,7 @@ public abstract class RestApi {
 		try {
 			ResponseSpec respenseSpec;
 			// request body 없는 경우
-			if (method == HttpMethod.GET) {
+			if (requestObject == null) { // method == HttpMethod.GET || method == HttpMethod.DELETE
 				respenseSpec = webClient()
 						.method(method)
 						.uri(url)
@@ -181,16 +205,16 @@ public abstract class RestApi {
 	private <T> void logging(URI url, HttpMethod method, HttpHeaders reqHeaders, Object reqBody, ResponseEntity<T> responseEntity, Exception e) {
 		if (Objects.isNull(e)) {
 			Object resBody = responseEntity.getBody();
-			logging(url, method, reqHeaders, reqBody==null?null:reqBody.toString(), responseEntity.getStatusCodeValue(),
+			logging(url, method, reqHeaders, reqBody==null?null:JsonUtils.string(reqBody), responseEntity.getStatusCodeValue(),
 					responseEntity.getStatusCode().getReasonPhrase(), responseEntity.getHeaders(),
 					resBody==null?null:JsonUtils.string(resBody), null);
 		}
 		else if (e instanceof RestClientResponseException) {
 			RestClientResponseException re = (RestClientResponseException) e;
-			logging(url, method, reqHeaders, reqBody==null?null:reqBody.toString(), re.getRawStatusCode(), re.getStatusText(),
+			logging(url, method, reqHeaders, reqBody==null?null:JsonUtils.string(reqBody), re.getRawStatusCode(), re.getStatusText(),
 					re.getResponseHeaders(), re.getResponseBodyAsString(), e);
 		} else {
-			logging(url, method, reqHeaders, reqBody==null?null:reqBody.toString(), -1, null, null, null, e);
+			logging(url, method, reqHeaders, reqBody==null?null:JsonUtils.string(reqBody), -1, null, null, null, e);
 		}
 	}
 
