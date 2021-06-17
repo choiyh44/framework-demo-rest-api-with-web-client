@@ -2,6 +2,7 @@ package kr.co.ensmart.frameworkdemo.common.rest;
 
 import java.time.Duration;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -12,17 +13,19 @@ import reactor.netty.http.client.HttpClient;
 
 @Configuration
 public class WebClientConfig {
-//	@Bean
-//	public ReactorResourceFactory resourceFactory() {
-//	    return new ReactorResourceFactory();
-//	}
 	
+	@Value("${x2commerce.web-client.connectTimeout:5}")
+	private long connectTimeout;
+
+	@Value("${x2commerce.web-client.readTimeout:30}")
+	private long readTimeout;
+
 	@Bean
 	public WebClient webClient() {
 
 		HttpClient httpClient = HttpClient.create()
-		        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000) // connection timeout
-		        .responseTimeout(Duration.ofSeconds(10)); // response timeout
+		        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int)Duration.ofSeconds(connectTimeout).toMillis()) // connection timeout
+		        .responseTimeout(Duration.ofSeconds(readTimeout)); // response timeout
 
 		WebClient webClient = WebClient.builder()
 				.codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
@@ -31,12 +34,6 @@ public class WebClientConfig {
 
 		return webClient;
 		
-//		Function<HttpClient, HttpClient> mapper = client -> {
-//	        return client;
-//	    };
-//
-//	    ClientHttpConnector connector = new ReactorClientHttpConnector(resourceFactory(), mapper); 
-//
-//	    return WebClient.builder().clientConnector(connector).build(); 
 	}
+
 }
